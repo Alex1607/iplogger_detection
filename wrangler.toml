@@ -1,0 +1,7 @@
+name = "iplogger_detection"
+main = "build/worker/shim.mjs"
+compatibility_date = "2022-01-20"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release" # required
+
