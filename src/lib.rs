@@ -1,10 +1,10 @@
 use std::str;
 
-use base64::Engine;
 use base64::engine::general_purpose;
+use base64::Engine;
 use serde::{Deserialize, Serialize};
-use worker::*;
 use worker::Method::Get;
+use worker::*;
 
 const IP_LOGGERS: [&str; 60] = [
     "over-blog.com",
@@ -83,19 +83,19 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
                     .with_method(Get)
                     .with_redirect(RequestRedirect::Manual);
 
-								let option_link = decode_base64(base64_input);
+                let option_link = decode_base64(base64_input);
 
-								if option_link.is_none() {
-										return build_response(
-												LoggerResponse {
-														response_type: ResponseType::BadRequest,
-														details: None,
-												},
-												400,
-										);
-								}
+                if option_link.is_none() {
+                    return build_response(
+                        LoggerResponse {
+                            response_type: ResponseType::BadRequest,
+                            details: None,
+                        },
+                        400,
+                    );
+                }
 
-								let link = option_link.unwrap();
+                let link = option_link.unwrap();
 
                 redirect_urls.push(link.to_string());
 
@@ -149,12 +149,12 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
 }
 
 fn decode_base64(base64_input: &String) -> Option<String> {
-		if let Ok(decoded) = general_purpose::URL_SAFE_NO_PAD.decode(base64_input) {
-				if let Ok(link) = str::from_utf8(decoded.as_slice()) {
-						return Some(link.to_string());
-				}
-		}
-		None
+    if let Ok(decoded) = general_purpose::URL_SAFE_NO_PAD.decode(base64_input) {
+        if let Ok(link) = str::from_utf8(decoded.as_slice()) {
+            return Some(link.to_string());
+        }
+    }
+    None
 }
 
 fn build_headers(status_code: u16) -> Result<Headers> {
@@ -174,7 +174,7 @@ fn build_response(logger_response: LoggerResponse, status_code: u16) -> Result<R
 
 #[derive(Debug, Deserialize, Serialize)]
 struct LoggerResponse {
-		#[serde(rename = "response")]
+    #[serde(rename = "response")]
     response_type: ResponseType,
     #[serde(skip_serializing_if = "Option::is_none")]
     details: Option<String>,
@@ -182,10 +182,10 @@ struct LoggerResponse {
 
 #[derive(Debug, Deserialize, Serialize)]
 enum ResponseType {
-		#[serde(rename = "BAD_REQUEST")]
-		BadRequest,
-		#[serde(rename = "OK")]
+    #[serde(rename = "BAD_REQUEST")]
+    BadRequest,
+    #[serde(rename = "OK")]
     Ok,
-		#[serde(rename = "IPLOGGER_DETECTED")]
-		IpLoggerDetected,
+    #[serde(rename = "IPLOGGER_DETECTED")]
+    IpLoggerDetected,
 }
