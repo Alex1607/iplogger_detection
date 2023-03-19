@@ -70,7 +70,7 @@ const IP_LOGGERS: [&str; 60] = [
 ];
 
 #[event(fetch)]
-pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Response> {
+pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
     let router = Router::new();
 
     router
@@ -96,6 +96,16 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
                 }
 
                 let link = option_link.unwrap();
+
+								if !link.starts_with("https://") && !link.starts_with("http://") {
+										return build_response(
+												LoggerResponse {
+														response_type: ResponseType::BadRequest,
+														details: Some("Links have to be absolute and start with either a http or https".to_string()),
+												},
+												400,
+										);
+								}
 
                 redirect_urls.push(link.to_string());
 
