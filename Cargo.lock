@@ -199,6 +199,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "logger-detect"
+version = "1.0.0"
+dependencies = [
+ "base64",
+ "serde",
+ "serde_json",
+ "worker",
+]
+
+[[package]]
 name = "matchit"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -479,16 +489,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
-name = "todo-worker"
-version = "0.0.0"
-dependencies = [
- "base64",
- "serde",
- "serde_json",
- "worker",
-]
-
-[[package]]
 name = "uncased"
 version = "0.9.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -626,9 +626,9 @@ dependencies = [
 
 [[package]]
 name = "worker"
-version = "0.0.14"
+version = "0.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ebe8a8b8570b17d9d012f48a3b4edf833ce96caa15a9270317640bf39f87e59"
+checksum = "f4ec504c3c7afcbcc9688938a540ec290d642e780b99cfc5b90bcc3c8ea32470"
 dependencies = [
  "async-trait",
  "chrono",

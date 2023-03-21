@@ -75,87 +75,95 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
 
     router
         .get("/", |_, _| Response::ok(""))
-        .get_async("/:url", |_, ctx| async move {
-            if let Some(base64_input) = ctx.param("url") {
-                let mut redirect_urls = Vec::new();
-                let mut request_init = RequestInit::new();
-                request_init
-                    .with_method(Get)
-                    .with_redirect(RequestRedirect::Manual);
-
-                let option_link = decode_base64(base64_input);
-
-                if option_link.is_none() {
-                    return build_response(
-                        LoggerResponse {
-                            response_type: ResponseType::BadRequest,
-                            details: None,
-                        },
-                        400,
-                    );
-                }
-
-                let link = option_link.unwrap();
-
-								if !link.starts_with("https://") && !link.starts_with("http://") {
-										return build_response(
-												LoggerResponse {
-														response_type: ResponseType::BadRequest,
-														details: Some("Links have to be absolute and start with either a http or https".to_string()),
-												},
-												400,
-										);
-								}
-
-                redirect_urls.push(link.to_string());
-
-                let url = Url::parse(link.as_str())?;
-                let request = Request::new_with_init(url.as_str(), &request_init)?;
-                let mut response = Fetch::Request(request).send().await?;
-
-                while response.status_code() == 301 || response.status_code() == 302 {
-                    if let Some(location) = response.headers().get("location")? {
-                        redirect_urls.push(location.to_string());
-
-                        let new_request = Request::new_with_init(location.as_str(), &request_init)?;
-                        response = Fetch::Request(new_request).send().await?;
-                    } else {
-                        break;
-                    }
-                }
-                for redirect_url in redirect_urls {
-                    if let Some(host) = Url::parse(redirect_url.as_str())?.host_str() {
-                        if IP_LOGGERS.contains(&host) {
-                            return build_response(
-                                LoggerResponse {
-                                    response_type: ResponseType::IpLoggerDetected,
-                                    details: Some(host.to_string()),
-                                },
-                                200,
-                            );
-                        }
-                    }
-                }
-
-                return build_response(
-                    LoggerResponse {
-                        response_type: ResponseType::Ok,
-                        details: None,
-                    },
-                    200,
-                );
-            }
-
-            build_response(
-                LoggerResponse {
-                    response_type: ResponseType::BadRequest,
-                    details: None,
-                },
-                400,
-            )
-        })
+        .get_async("/:url", check_for_iplogger)
         .run(req, env)
         .await
+}
+
+async fn check_for_iplogger(_: Request, ctx: RouteContext<()>) -> Result<Response> {
+    let Some(base64_input) = ctx.param("url") else {
+				return build_response(
+						LoggerResponse {
+								response_type: ResponseType::BadRequest,
+								details: None,
+						},
+						400,
+				);
+		};
+
+    let mut redirect_urls = Vec::new();
+    let mut request_init = RequestInit::new();
+    request_init
+        .with_method(Get)
+        .with_redirect(RequestRedirect::Manual);
+
+    let option_link = decode_base64(base64_input);
+
+    if option_link.is_none() {
+        return build_response(
+            LoggerResponse {
+                response_type: ResponseType::BadRequest,
+                details: None,
+            },
+            400,
+        );
+    }
+
+    let link = option_link.unwrap();
+
+    if !link.starts_with("https://") && !link.starts_with("http://") {
+        return build_response(
+            LoggerResponse {
+                response_type: ResponseType::BadRequest,
+                details: Some(
+                    "Links have to be absolute and start with either a http or https".to_string(),
+                ),
+            },
+            400,
+        );
+    }
+
+    redirect_urls.push(link.to_string());
+
+    let url = Url::parse(link.as_str())?;
+    let request = Request::new_with_init(url.as_str(), &request_init)?;
+    let mut response = Fetch::Request(request).send().await?;
+
+    while response.status_code() == 301 || response.status_code() == 302 {
+        let Some(location) = response.headers().get("location")? else {
+						break;
+				};
+
+        redirect_urls.push(location.to_string());
+
+        let new_request = Request::new_with_init(location.as_str(), &request_init)?;
+        response = Fetch::Request(new_request).send().await?;
+    }
+    for redirect_url in redirect_urls {
+				let url = Url::parse(redirect_url.as_str())?;
+
+        let Some(host) = url.host_str() else {
+						continue;
+				};
+
+        if IP_LOGGERS.contains(&host) {
+            return build_response(
+                LoggerResponse {
+                    response_type: ResponseType::IpLoggerDetected,
+                    details: Some(host.to_string()),
+                },
+                200,
+            );
+        }
+    }
+
+    build_response(
+        LoggerResponse {
+            response_type: ResponseType::Ok,
+            details: None,
+        },
+        200,
+    )
 }
 
 fn decode_base64(base64_input: &String) -> Option<String> {
