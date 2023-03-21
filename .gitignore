@@ -4,6 +4,8 @@
 **/*.rs.bk
 wasm-pack.log
 
+Cargo.lock
+
 build/
 /target
 /dist
