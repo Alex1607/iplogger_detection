@@ -1,7 +1,7 @@
-use worker::{Fetch, Request, RequestInit, RequestRedirect, Response, RouteContext, Url};
-use worker::Method::Get;
 use crate::ip_loggers::IP_LOGGERS;
 use crate::response::{LoggerResponse, ResponseType};
+use worker::Method::Get;
+use worker::{Fetch, Request, RequestInit, RequestRedirect, Response, RouteContext, Url};
 
 pub async fn check_for_iplogger(_: Request, ctx: RouteContext<()>) -> worker::Result<Response> {
     let Some(base64_input) = ctx.param("url") else {
@@ -62,8 +62,9 @@ pub async fn check_for_iplogger(_: Request, ctx: RouteContext<()>) -> worker::Re
         let new_request = Request::new_with_init(location.as_str(), &request_init)?;
         response = Fetch::Request(new_request).send().await?;
     }
+
     for redirect_url in redirect_urls {
-				let url = Url::parse(redirect_url.as_str())?;
+        let url = Url::parse(redirect_url.as_str())?;
 
         let Some(host) = url.host_str() else {
 						continue;

@@ -1,17 +1,18 @@
-use worker::{Cors, Headers, Response};
 use serde::{Deserialize, Serialize};
+use worker::{Cors, Headers, Response};
 
-fn build_headers(status_code: u16) -> worker::Result<Headers> {
+fn build_headers() -> worker::Result<Headers> {
     let mut headers = Headers::new();
-    if (200..=299).contains(&status_code) {
-        headers.set("Content-Type", "application/json")?;
-    }
+    headers.set("Content-Type", "application/json")?;
     Ok(headers)
 }
 
-pub fn build_response(logger_response: LoggerResponse, status_code: u16) -> worker::Result<Response> {
+pub fn build_response(
+    logger_response: LoggerResponse,
+    status_code: u16,
+) -> worker::Result<Response> {
     Response::ok(serde_json::to_string(&logger_response).unwrap())?
-        .with_headers(build_headers(status_code)?)
+        .with_headers(build_headers()?)
         .with_status(status_code)
         .with_cors(&Cors::new().with_origins(vec!["*"]))
 }
@@ -19,9 +20,9 @@ pub fn build_response(logger_response: LoggerResponse, status_code: u16) -> work
 #[derive(Debug, Deserialize, Serialize)]
 pub struct LoggerResponse {
     #[serde(rename = "response")]
-    response_type: ResponseType,
+    pub response_type: ResponseType,
     #[serde(skip_serializing_if = "Option::is_none")]
-    details: Option<String>,
+    pub details: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

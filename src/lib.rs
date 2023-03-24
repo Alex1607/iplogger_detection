@@ -24,9 +24,9 @@ fn decode_base64(base64_input: &String) -> Option<String> {
         return None;
     };
 
-		let Ok(link) = str::from_utf8(decoded.as_slice()) else {
+    let Ok(link) = str::from_utf8(decoded.as_slice()) else {
 				return None;
 		};
 
-		Some(link.to_string())
+    Some(link.to_string())
 }
